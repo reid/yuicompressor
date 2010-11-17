@@ -204,14 +204,14 @@ public class Configuration implements Cloneable {
     }
 
     public void setOutput(String output) throws ConfigurationException {
-        if (output != null) {
-            output = output.toLowerCase();
-            if (
-                    !( output.equals("json") || output.equals("raw") )
-                    && (getServerPort() > 0)
-               ) {
-                throw new ConfigurationException("In server mode, only json or raw output types are allowed.");
-            }
+        if (
+            output != null
+            && !(    output.equalsIgnoreCase("json")
+                  || output.equalsIgnoreCase("raw")
+                )
+            && (getServerPort() > 0)
+           ) {
+           throw new ConfigurationException("In server mode, only json or raw output types are allowed.");
         }
         setOutputRaw(output);
     }

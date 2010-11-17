@@ -164,7 +164,7 @@ public class YUICompressor {
                             out = new OutputStreamWriter(new FileOutputStream(outputFilename), charset);
                         }
 
-                        boolean munge = !config.isMunge();
+                        boolean munge = config.isMunge();
                         boolean preserveSemicolons = config.isPreserveSemicolons();
                         boolean disableOptimizations = config.isOptimize();
                         boolean verbose = config.isVerbose();

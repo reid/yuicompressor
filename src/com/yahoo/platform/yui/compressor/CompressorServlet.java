@@ -1,29 +1,21 @@
 package com.yahoo.platform.yui.compressor;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletException;
+
+import java.io.*;
+import java.util.LinkedList;
+import java.util.Map;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONString;
 import org.json.JSONStringer;
 import org.mozilla.javascript.EvaluatorException;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
-import java.net.HttpURLConnection;
-import java.net.URLDecoder;
-import java.util.LinkedList;
-import java.util.Map;
-
-public class CompressorHttpHandler implements HttpHandler {
+public class CompressorServlet extends HttpServlet {
 
     Configuration config;
 
@@ -31,6 +23,11 @@ public class CompressorHttpHandler implements HttpHandler {
         private LinkedList<String> errors = new LinkedList<String>();
         private LinkedList<String> warnings = new LinkedList<String>();
         private ByteArrayOutputStream result = new ByteArrayOutputStream();
+        private String charset = "UTF-8";
+
+        public Response (Configuration config) {
+            this.charset = config.getCharset();
+        }
 
         public LinkedList<String> getErrors() {
             return errors;
@@ -60,7 +57,7 @@ public class CompressorHttpHandler implements HttpHandler {
             try {
                 JSONArray warnings = new JSONArray(getWarnings());
                 JSONArray errors = new JSONArray(getErrors());
-                String result = new String(getResult().toByteArray());
+                String result = getResult().toString(this.charset);
                 return new JSONStringer()
                     .object().key("result").value(result)
                              .key("warnings").value(warnings)
@@ -68,27 +65,42 @@ public class CompressorHttpHandler implements HttpHandler {
                     .endObject().toString();
             } catch (JSONException ex) {
                 return "JSON Failure: " + ex.getMessage();
+            } catch (UnsupportedEncodingException ex) {
+                return "JSON Encoding Failure: " + ex.getMessage();
             }
         }
     }
 
-    public CompressorHttpHandler (Configuration config) {
+    public CompressorServlet(Configuration config) {
         config.setOutputRaw("json");
         this.config = config;
+        // System.err.println("Jetty Charset: " + config.getCharset());
     }
 
-    public void handle (HttpExchange t) throws IOException {
+    protected void doPut (HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+
         // Inherit configuration defaults from the command line.
         // Make a clone for this request.
         Configuration config = this.config.clone();
 
+        String charset;
+        String requestCharset = request.getCharacterEncoding();
+
+        if (requestCharset == null) { // none specified
+            charset = config.getCharset();
+            // Before reading parameters or using getReader,
+            // we must set the encoding.
+            request.setCharacterEncoding(charset);
+        } else { // use the provided encoding
+            charset = requestCharset;
+            config.setCharset(charset);
+        }
+
         try {
-            config = parseOptions(config, t); // get desired response format first
-            if (!t.getRequestMethod().toUpperCase().equals("PUT")) {
-                throw new ConfigurationException("You must PUT JavaScript or CSS to this endpoint.");
-            }
+            config = parseOptions(config, request); // get desired response format first
         } catch (ConfigurationException ex) {
-            abort("Bad request", ex, HttpURLConnection.HTTP_BAD_REQUEST, config, t);
+            abort("Bad request", ex, HttpServletResponse.SC_BAD_REQUEST, config, response);
             return;
         }
 
@@ -97,9 +109,7 @@ public class CompressorHttpHandler implements HttpHandler {
         // Decode
         // String to InputStream
 
-        InputStream requestBody = t.getRequestBody();
-        Reader in = new InputStreamReader(requestBody, config.getCharset());
-        BufferedReader br = new BufferedReader(in);
+        BufferedReader br = request.getReader();
         StringBuilder sb = new StringBuilder();
         String tmp = br.readLine();
         while (tmp != null) {
@@ -108,58 +118,61 @@ public class CompressorHttpHandler implements HttpHandler {
             tmp = br.readLine();
         }
         String incoming = sb.toString();
-        // incoming = URLDecoder.decode(incoming, config.getCharset());
 
         // System.err.print(incoming.toCharArray());
 
-        in = new InputStreamReader(new ByteArrayInputStream(incoming.getBytes()));
+        Reader in = new InputStreamReader(new ByteArrayInputStream(incoming.getBytes(charset)), charset);
 
-        Response response;
+        Response compressorResponse;
 
         try {
-            response = compress(in, config);
+            compressorResponse = compress(in, config);
         } catch (EvaluatorException ex) {
             // Your fault.
-            abort("Syntax error", ex, HttpURLConnection.HTTP_BAD_REQUEST, config, t);
+            abort("Syntax error", ex, HttpServletResponse.SC_BAD_REQUEST, config, response);
             return;
         } catch (IOException ex) {
             // My fault.
-            abort("Compressor failed", ex, HttpURLConnection.HTTP_INTERNAL_ERROR, config, t);
+            abort("Compressor failed", ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, config, response);
             return;
         }
 
-        respond(HttpURLConnection.HTTP_OK, response, config, t);
+        respond(HttpServletResponse.SC_OK, compressorResponse, config, response);
     }
 
-    private void respond (int httpCode, Response response, Configuration config, HttpExchange t) {
+    private void respond (int httpCode, Response response, Configuration config, HttpServletResponse r) {
         try {
-
-            OutputStream body = t.getResponseBody();
 
             String outputFormat = config.getOutput();
 
             boolean json = false;
             if (outputFormat.equals("json")) json = true;
 
-            byte[] resultBytes;
             String str;
+            String contentType;
             if (json) {
+                contentType = "application/json";
                 str = response.toJSONString();
-                resultBytes = str.getBytes();
             } else {
-                if (httpCode != HttpURLConnection.HTTP_OK) {
+                if (httpCode != HttpServletResponse.SC_OK) {
+                    contentType = "text/plain";
                     str = "Error: " + response.getErrors().getFirst();
-                    resultBytes = str.getBytes();
                 } else {
-                    resultBytes = response.getResult().toByteArray();
+                    if (config.isCss()) {
+                        contentType = "text/css";
+                    } else {
+                        contentType = "text/javascript";
+                    }
+                    byte[] resultBytes = response.getResult().toByteArray();
                     str = new String(resultBytes);
                 }
             }
 
-            t.sendResponseHeaders(httpCode, str.length());
-
-            body.write(resultBytes);
-            body.close();
+            r.setStatus(httpCode);
+            r.setContentType(contentType);
+            r.setCharacterEncoding(config.getCharset());
+            PrintWriter body = r.getWriter();
+            body.write(str);
 
         } catch (Exception ex) {
             // We can't really recover.
@@ -168,25 +181,26 @@ public class CompressorHttpHandler implements HttpHandler {
         }
     }
 
-    private void abort (String message, Exception ex, int httpCode, Configuration config, HttpExchange t)
+    private void abort (String message, Exception ex, int httpCode, Configuration config, HttpServletResponse r)
             throws IOException {
         String error = message + ": " + ex.getMessage();
         // System.err.println(error);
 
-        Response response = new Response();
+        Response response = new Response(config);
         LinkedList<String> errors = new LinkedList<String>();
         errors.add(error);
         response.setErrors(errors);
 
-        respond(httpCode, response, config, t);
+        respond(httpCode, response, config, r);
     }
 
-    private Configuration parseOptions (Configuration config, HttpExchange t)
+    private Configuration parseOptions (Configuration config, HttpServletRequest r)
             throws ConfigurationException, IOException {
-        Map<String, String> query = (Map<String, String>) t.getAttribute("query");
+        Map<String, String[]> query = (Map<String, String[]>) r.getParameterMap();
 
         for (String key : query.keySet()) {
-            String value = query.get(key);
+            String value = query.get(key)[0];
+            System.err.println(value);
             key = key.toLowerCase();
             value = value.toLowerCase();
             // System.err.println("parseOptions: " + key + " = " + value);
@@ -214,7 +228,7 @@ public class CompressorHttpHandler implements HttpHandler {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
         Writer streamWriter = new OutputStreamWriter(result, config.getCharset());
 
-        Response response = new Response();
+        Response response = new Response(config);
 
         if (config.isCss()) {
 

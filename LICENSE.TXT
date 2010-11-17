@@ -1,6 +1,6 @@
 YUI Compressor Copyright License Agreement (BSD License)
 
-Copyright (c) 2009, Yahoo! Inc.
+Copyright (c) 2010, Yahoo! Inc.
 All rights reserved.
 
 Redistribution and use of this software in source and binary forms,
@@ -33,6 +33,13 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 This software also requires access to software from the following sources:
+
+The Jetty Web Container ( http://eclipse.org/jetty/ ) is available
+under the Apache 2.0 license. See lib/NOTICE.jetty.txt for more info.
+Copyright 1995-2009 Mort Bay Consulting Pty Ltd.
+
+The javax.servlet package is available under the Apache 2.0 license.
+Copyright 1999-2010 The Apache Software Foundation.
 
 The Jarg Library v 1.0 ( http://jargs.sourceforge.net/ ) is available
 under a BSD License – Copyright (c) 2001-2003 Steve Purcell,

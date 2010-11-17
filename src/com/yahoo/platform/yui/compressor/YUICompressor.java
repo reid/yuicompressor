@@ -8,9 +8,8 @@
 
 package com.yahoo.platform.yui.compressor;
 
-import com.sun.net.httpserver.HttpContext;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
 
@@ -21,8 +20,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.net.InetSocketAddress;
 import java.util.List;
+
+import org.eclipse.jetty.server.Server;
 
 public class YUICompressor {
 
@@ -51,17 +51,27 @@ public class YUICompressor {
         } catch (IOException e) {
             System.err.println("IO Error: " + e.getMessage());
             System.exit(1);
+        } catch (Exception e) {
+            System.err.println("Mysterious error.");
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 
-    private static void server(Configuration config) throws IOException {
-        System.err.println("Server starting on port " + config.getServerPort() + ".");
-        HttpHandler compressor = new CompressorHttpHandler(config);
-        HttpServer server = HttpServer.create(new InetSocketAddress(config.getServerPort()), 0);
-        HttpContext context = server.createContext("/compress", compressor);
-        context.getFilters().add(0, new HttpQueryFilter());
-        server.setExecutor(null);
+    private static void server(Configuration config) throws Exception {
+        System.err.println("Jetty server starting on port " + config.getServerPort() + ".");
+
+        Server server = new Server(config.getServerPort());
+
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        context.setContextPath("/");
+
+        server.setHandler(context);
+
+        context.addServlet(new ServletHolder(new CompressorServlet(config)), "/compress");
+         
         server.start();
+        server.join();
     }
 
     private static void compress(Configuration config) {

@@ -20,11 +20,13 @@
                includes="**/*.java"
                deprecation="off"
                debug="on"
-               source="6">
+               source="5">
             <classpath>
                 <pathelement location="${lib.dir}/jargs-1.0.jar"/>
                 <pathelement location="${lib.dir}/json.jar"/>
                 <pathelement location="${lib.dir}/rhino-1.6R7.jar"/>
+                <pathelement location="${lib.dir}/jetty-all-7.0.2.v20100331.jar"/>
+                <pathelement location="${lib.dir}/servlet-api-2.5.jar"/>
             </classpath>
         </javac>
     </target>
@@ -36,6 +38,8 @@
         <unjar src="${lib.dir}/jargs-1.0.jar" dest="${build.dir}/jar"/>
         <unjar src="${lib.dir}/rhino-1.6R7.jar" dest="${build.dir}/jar"/>
         <unjar src="${lib.dir}/json.jar" dest="${build.dir}/jar"/>
+        <unjar src="${lib.dir}/jetty-all-7.0.2.v20100331.jar" dest="${build.dir}/jar"/>
+        <unjar src="${lib.dir}/servlet-api-2.5.jar" dest="${build.dir}/jar"/>
         <copy todir="${build.dir}/jar">
             <fileset dir="${build.dir}/classes" includes="**/*.class"/>
         </copy>

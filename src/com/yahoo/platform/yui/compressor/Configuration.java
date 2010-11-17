@@ -57,7 +57,7 @@ public class Configuration implements Cloneable {
         setFiles(cliParser.getRemainingArgs());
     }
 
-    // Used by CompressorHttpHandler to provide a request-level
+    // Used by CompressorServlet to provide a request-level
     // Configuration object that inherits defaults from the CLI config.
     public Configuration clone () {
         try {

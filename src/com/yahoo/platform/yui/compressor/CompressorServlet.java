@@ -181,7 +181,6 @@ public class CompressorServlet extends HttpServlet {
 
         for (String key : query.keySet()) {
             String value = query.get(key)[0];
-            System.err.println(value);
             key = key.toLowerCase();
             value = value.toLowerCase();
             // System.err.println("parseOptions: " + key + " = " + value);

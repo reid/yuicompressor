@@ -104,29 +104,10 @@ public class CompressorServlet extends HttpServlet {
             return;
         }
 
-        // Theory of operation:
-        // InputStream to String
-        // Decode
-        // String to InputStream
-
-        BufferedReader br = request.getReader();
-        StringBuilder sb = new StringBuilder();
-        String tmp = br.readLine();
-        while (tmp != null) {
-            sb.append(tmp);
-            sb.append("\n");
-            tmp = br.readLine();
-        }
-        String incoming = sb.toString();
-
-        // System.err.print(incoming.toCharArray());
-
-        Reader in = new InputStreamReader(new ByteArrayInputStream(incoming.getBytes(charset)), charset);
-
         Response compressorResponse;
 
         try {
-            compressorResponse = compress(in, config);
+            compressorResponse = compress(request.getReader(), config);
         } catch (EvaluatorException ex) {
             // Your fault.
             abort("Syntax error", ex, HttpServletResponse.SC_BAD_REQUEST, config, response);

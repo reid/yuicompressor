@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class JavaScriptCompressor {
+public class JavaScriptCompressor implements ConfigurableCompressor {
 
     static final ArrayList ones;
     static final ArrayList twos;

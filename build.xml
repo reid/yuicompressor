@@ -27,6 +27,7 @@
                 <pathelement location="${lib.dir}/rhino-1.6R7.jar"/>
                 <pathelement location="${lib.dir}/jetty-all-7.0.2.v20100331.jar"/>
                 <pathelement location="${lib.dir}/servlet-api-2.5.jar"/>
+                <pathelement location="${lib.dir}/ant.jar"/>
             </classpath>
         </javac>
     </target>
@@ -40,6 +41,7 @@
         <unjar src="${lib.dir}/json.jar" dest="${build.dir}/jar"/>
         <unjar src="${lib.dir}/jetty-all-7.0.2.v20100331.jar" dest="${build.dir}/jar"/>
         <unjar src="${lib.dir}/servlet-api-2.5.jar" dest="${build.dir}/jar"/>
+        <unjar src="${lib.dir}/ant.jar" dest="${build.dir}/jar"/>
         <copy todir="${build.dir}/jar">
             <fileset dir="${build.dir}/classes" includes="**/*.class"/>
         </copy>

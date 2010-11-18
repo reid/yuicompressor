@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.ArrayList; 
 
-public class CssCompressor {
+public class CssCompressor implements ConfigurableCompressor {
 
     private StringBuffer srcsb = new StringBuffer();
 
@@ -27,6 +27,11 @@ public class CssCompressor {
         while ((c = in.read()) != -1) {
             srcsb.append((char) c);
         }
+    }
+
+    public void compress(Writer out, Configuration config)
+            throws IOException {
+        compress(out, config.getLineBreak());
     }
 
     public void compress(Writer out, int linebreakpos)

@@ -41,7 +41,6 @@
         <unjar src="${lib.dir}/json.jar" dest="${build.dir}/jar"/>
         <unjar src="${lib.dir}/jetty-all-7.0.2.v20100331.jar" dest="${build.dir}/jar"/>
         <unjar src="${lib.dir}/servlet-api-2.5.jar" dest="${build.dir}/jar"/>
-        <unjar src="${lib.dir}/ant.jar" dest="${build.dir}/jar"/>
         <copy todir="${build.dir}/jar">
             <fileset dir="${build.dir}/classes" includes="**/*.class"/>
         </copy>
@@ -50,6 +49,19 @@
                 <attribute name="Main-Class" value="com.yahoo.platform.yui.compressor.Bootstrap"/>
             </manifest>
         </jar>
+    </target>
+
+    <target name="build.ant.jar" depends="build.classes">
+        <mkdir dir="${build.dir}/jar"/>
+        <!-- The order is important here. Rhino MUST be unjarred first!
+             (some of our own classes will override the Rhino classes) -->
+        <unjar src="${lib.dir}/jargs-1.0.jar" dest="${build.dir}/jar"/>
+        <unjar src="${lib.dir}/rhino-1.6R7.jar" dest="${build.dir}/jar"/>
+        <unjar src="${lib.dir}/json.jar" dest="${build.dir}/jar"/>
+        <copy todir="${build.dir}/jar">
+            <fileset dir="${build.dir}/classes" includes="**/*.class"/>
+        </copy>
+        <jar destfile="${build.dir}/ant-${jar.name}" basedir="${build.dir}/jar"/>
     </target>
 
     <target name="build.dist.package" depends="build.jar">

@@ -20,7 +20,8 @@
                includes="**/*.java"
                deprecation="off"
                debug="on"
-               source="5">
+               source="1.5"
+               target="1.5">
             <classpath>
                 <pathelement location="${lib.dir}/jargs-1.0.jar"/>
                 <pathelement location="${lib.dir}/json.jar"/>

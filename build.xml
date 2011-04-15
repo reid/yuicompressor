@@ -52,10 +52,13 @@
             <fileset dir=".">
                 <include name="ant.properties"/>
                 <include name="build.xml"/>
+                <include name="LICENSE.TXT"/>
                 <include name="doc/**/*"/>
                 <include name="lib/**/*"/>
+                <include name="ports/**/*"/>
                 <include name="src/**/*"/>
-                <exclude name="**/CVS"/>
+                <include name="tests/**/*"/>
+                <exclude name="**/.git"/>
             </fileset>
         </copy>
         <zip destfile="${build.dir}/${dist.package.name}.zip"

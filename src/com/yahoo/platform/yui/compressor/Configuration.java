@@ -222,7 +222,7 @@ public class Configuration implements Cloneable {
 
     public void setFiles(List files) throws ConfigurationException {
         if (files.isEmpty()) {
-            if (getInputType() == null) {
+            if (getServerPort() == 0 && getInputType() == null) {
                 throw new ConfigurationException("When reading from stdin, type argument is required.");
             }
             files = new java.util.ArrayList();

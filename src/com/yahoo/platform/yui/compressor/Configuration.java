@@ -220,15 +220,18 @@ public class Configuration implements Cloneable {
         return files;
     }
 
-    public void setFiles(List files) {
+    public void setFiles(List files) throws ConfigurationException {
         if (files.isEmpty()) {
+            if (getInputType() == null) {
+                throw new ConfigurationException("When reading from stdin, type argument is required.");
+            }
             files = new java.util.ArrayList();
             files.add("-"); // read from stdin
         }
         this.files = files;
     }
 
-    public void setFiles(String[] files) {
+    public void setFiles(String[] files) throws ConfigurationException {
         setFiles(java.util.Arrays.asList(files));
     }
 

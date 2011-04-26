@@ -38,8 +38,6 @@ public class YUICompressor {
 
             if (config.getServerPort() > 0) {
                 server(config);
-            } else if (config.getFiles().isEmpty()) {
-                throw new ConfigurationException("Filename or server option required.");
             } else {
                 compress(config);
             }

@@ -105,13 +105,13 @@ public class CompressorTask extends Task {
             ResourceCollection rc = (ResourceCollection) it.next();
             
             for(Iterator rcit = rc.iterator(); rcit.hasNext();) {
-                Resource r = (Resource) rcit.next();
-                File in = ((FileProvider) r.as(FileProvider.class)).getFile();
+                FileResource fr = (FileResource) rcit.next();
+                File in = fr.getFile();
                 
-                String[] mapped = mapper.mapFileName(r.getName());
+                String[] mapped = mapper.mapFileName(fr.getName());
                 if (mapped != null && mapped.length > 0) {
                     for(int k = 0; k < mapped.length; k++) {
-                        File out = getProject().resolveFile(in.getParent() + File.separator + mapped[k]);
+                        File out = getProject().resolveFile(fr.getBaseDir() + File.separator + mapped[k]);
                         
                         compress(in, out, config);
                     }

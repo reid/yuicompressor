@@ -27,6 +27,8 @@ public class CompressorTask extends Task {
     private Mapper mapperElement = null;
     private Vector rcs = new Vector();
     
+    private boolean typeOverride = false;
+    
     public void setInput (File input) {
         this.input = input;
     }
@@ -94,6 +96,9 @@ public class CompressorTask extends Task {
             throw new BuildException(ex.getMessage(), ex);
         }
         
+        if(config.getInputType() != null) {
+            typeOverride = true;
+        }
         
         if(input != null && input.exists()) {
             compress(this.input, this.output, config);
@@ -124,14 +129,17 @@ public class CompressorTask extends Task {
     private void compress(File input, File output, Configuration config) throws BuildException {
         String inputFilename = input.getName();
         String charset = config.getCharset();
-
-        int idx = inputFilename.lastIndexOf('.');
-        if (idx >= 0 && idx < inputFilename.length() - 1) {
-             try {
-                config.setInputType(inputFilename.substring(idx + 1));
-             } catch (ConfigurationException ex) {
-                 throw new BuildException(ex.getMessage(), ex);
-             }
+        
+        //only get filetype from the filename if it wasn't set as an option
+        if(!typeOverride) {
+            int idx = inputFilename.lastIndexOf('.');
+            if (idx >= 0 && idx < inputFilename.length() - 1) {
+                 try {
+                    config.setInputType(inputFilename.substring(idx + 1));
+                 } catch (ConfigurationException ex) {
+                     throw new BuildException(ex.getMessage(), ex);
+                 }
+            }
         }
 
         log("Compressing " + input.getAbsolutePath(), Project.MSG_VERBOSE);

@@ -113,10 +113,10 @@ public class CompressorTask extends Task {
                 FileResource fr = (FileResource) rcit.next();
                 File in = fr.getFile();
                 
-                String[] mapped = mapper.mapFileName(fr.getName());
+                String[] mapped = mapper.mapFileName(in.getName());
                 if (mapped != null && mapped.length > 0) {
                     for(int k = 0; k < mapped.length; k++) {
-                        File out = getProject().resolveFile(fr.getBaseDir() + File.separator + mapped[k]);
+                        File out = getProject().resolveFile(in.getParent() + File.separator + mapped[k]);
                         
                         compress(in, out, config);
                     }

@@ -27,6 +27,8 @@ public class CompressorTask extends Task {
     private Mapper mapperElement = null;
     private Vector rcs = new Vector();
     
+    private boolean typeOverride = false;
+    
     public void setInput (File input) {
         this.input = input;
     }
@@ -94,6 +96,9 @@ public class CompressorTask extends Task {
             throw new BuildException(ex.getMessage(), ex);
         }
         
+        if(config.getInputType() != null) {
+            typeOverride = true;
+        }
         
         if(input != null && input.exists()) {
             compress(this.input, this.output, config);
@@ -105,10 +110,10 @@ public class CompressorTask extends Task {
             ResourceCollection rc = (ResourceCollection) it.next();
             
             for(Iterator rcit = rc.iterator(); rcit.hasNext();) {
-                Resource r = (Resource) rcit.next();
-                File in = ((FileProvider) r.as(FileProvider.class)).getFile();
+                FileResource fr = (FileResource) rcit.next();
+                File in = fr.getFile();
                 
-                String[] mapped = mapper.mapFileName(r.getName());
+                String[] mapped = mapper.mapFileName(in.getName());
                 if (mapped != null && mapped.length > 0) {
                     for(int k = 0; k < mapped.length; k++) {
                         File out = getProject().resolveFile(in.getParent() + File.separator + mapped[k]);
@@ -124,14 +129,17 @@ public class CompressorTask extends Task {
     private void compress(File input, File output, Configuration config) throws BuildException {
         String inputFilename = input.getName();
         String charset = config.getCharset();
-
-        int idx = inputFilename.lastIndexOf('.');
-        if (idx >= 0 && idx < inputFilename.length() - 1) {
-             try {
-                config.setInputType(inputFilename.substring(idx + 1));
-             } catch (ConfigurationException ex) {
-                 throw new BuildException(ex.getMessage(), ex);
-             }
+        
+        //only get filetype from the filename if it wasn't set as an option
+        if(!typeOverride) {
+            int idx = inputFilename.lastIndexOf('.');
+            if (idx >= 0 && idx < inputFilename.length() - 1) {
+                 try {
+                    config.setInputType(inputFilename.substring(idx + 1));
+                 } catch (ConfigurationException ex) {
+                     throw new BuildException(ex.getMessage(), ex);
+                 }
+            }
         }
 
         log("Compressing " + input.getAbsolutePath(), Project.MSG_VERBOSE);
